@@ -4,6 +4,7 @@ import os
 
 bot = telebot.TeleBot("8080539230:AAH7x2vQ2wBmvnUKhGnOVQlrptn4sjlnWXs")
 now_family = ''
+now_user_id = ''
 
 
 @bot.message_handler(commands=['start'])
@@ -26,8 +27,10 @@ def create_family(message):
     conn = sqlite3.connect(f'{now_family}.sql')
     cor = conn.cursor()
     cor.execute(
-        "create table if not exists list_family (id int avto_increment primary key, name varchar(50), surname varchar(50))")
+        "create table if not exists list_family (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(50), surname varchar(50))")
     conn.commit()
+    cor.execute(
+        "create table if not exists list_notes (id INTEGER PRIMARY KEY AUTOINCREMENT, family_id int, date timestamp, notes varchar(50) foreign key (user_id) references list_family(id) on delete cascade")
     cor.close()
     conn.close()
     now_family = name_family
@@ -66,6 +69,25 @@ def add_person(message):
     cur.close()
     conn.close()
     bot.send_message(message.chat.id, 'Вы успешно добавили человека')
+
+
+@bot.message_handler(commands=['add_note'])
+def accept_user(message):
+    bot.send_message(message.chat.id, 'Введите имя и фамилию человека, для которого хотите добавить событие')
+    bot.register_next_step_handler(message, accept_id_user)
+
+
+def accept_id_user(message):
+    global now_family, now_user_id
+    name, surname = message.text.strip().split()
+    conn = sqlite3.connect(f'{now_family}.sqp')
+    cur = conn.cursor()
+    cur.execute("select id from list_family where name = '%s' and surname = '%s'" % (name, surname))
+    now_user_id = cur.fetchall()[0][0]
+    bot.send_message(message.chat.id, 'Введите дату и само событие в формате:\ndate(day.month.year)_note')
+    bot.register_next_step_handler(message, add_note)
+
+def add_note(message):
 
 
 @bot.message_handler(commands=['view_family'])
