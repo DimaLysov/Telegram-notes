@@ -7,6 +7,40 @@ now_family = ''
 now_user_id = ''
 
 
+def view_info(name_table):
+    global now_family
+    conn = sqlite3.connect(f'{now_family}.sql')
+    cur = conn.cursor()
+    cur.execute("select * from %s" % name_table)
+    info = cur.fetchall()
+    cur.close()
+    conn.close()
+    return info
+
+
+def new_family(name_family):
+    fail = open(f'{name_family}.sql', 'w')
+    fail.close()
+    conn = sqlite3.connect(f'{name_family}.sql')
+    cor = conn.cursor()
+    cor.execute('''create table if not exists list_family (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name text not null,
+                        surname text
+                        )''')
+    conn.commit()
+    cor.execute('''create table if not exists list_notes (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        family_id int,
+                        notes text not null,
+                        date timestamp,
+                        foreign key (family_id) references list_family(id)
+                        )''')
+    conn.commit()
+    cor.close()
+    conn.close()
+
+
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.send_message(message.chat.id, 'Добро пожаловать')
@@ -20,20 +54,8 @@ def accept_family_name(message):
 
 def create_family(message):
     global now_family
-    name_family = message.text.strip()
-    new_family = open(f'{name_family}.sql', 'w')
-    new_family.close()
-    now_family = name_family
-    conn = sqlite3.connect(f'{now_family}.sql')
-    cor = conn.cursor()
-    cor.execute(
-        "create table if not exists list_family (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(50), surname varchar(50))")
-    conn.commit()
-    cor.execute(
-        "create table if not exists list_notes (id INTEGER PRIMARY KEY AUTOINCREMENT, family_id int, date timestamp, notes varchar(50) foreign key (user_id) references list_family(id) on delete cascade")
-    cor.close()
-    conn.close()
-    now_family = name_family
+    now_family = message.text.strip()
+    new_family(now_family)
     bot.send_message(message.chat.id, 'Вы успешно перешли в вашу новую семью')
 
 
@@ -80,26 +102,46 @@ def accept_user(message):
 def accept_id_user(message):
     global now_family, now_user_id
     name, surname = message.text.strip().split()
-    conn = sqlite3.connect(f'{now_family}.sqp')
+    conn = sqlite3.connect(f'{now_family}.sql')
     cur = conn.cursor()
     cur.execute("select id from list_family where name = '%s' and surname = '%s'" % (name, surname))
-    now_user_id = cur.fetchall()[0][0]
+    now_user_id = cur.fetchone()[0]
     bot.send_message(message.chat.id, 'Введите дату и само событие в формате:\ndate(day.month.year)_note')
     bot.register_next_step_handler(message, add_note)
 
+
 def add_note(message):
+    global now_family, now_user_id
+    date, note = message.text.strip().split('_')
+    conn = sqlite3.connect(f'{now_family}.sql')
+    cur = conn.cursor()
+    cur.execute("insert into list_notes (family_id, date, notes) values ('%s', '%s', '%s')" % (now_user_id, note, date))
+    conn.commit()
+    cur.close()
+    conn.close()
+    bot.send_message(message.chat.id, 'Вы успешно добавли событие')
+
+
+@bot.message_handler(commands=['view_notes'])
+def view_notes(message):
+    global now_family
+    notes = view_info('list_notes')
+    conn = sqlite3.connect(f'{now_family}.sql')
+    cur = conn.cursor()
+    info = f'Список событий семьи {now_family}:\n'
+    for note in notes:
+        cur.execute("select name, surname from list_family where id=%s" % note[1])
+        name, surname = cur.fetchone()
+        info += f'{name} {surname}: {note[3]}. Дата {note[2]}\n'
+    bot.send_message(message.chat.id, info)
 
 
 @bot.message_handler(commands=['view_family'])
 def view_family(message):
-    global now_family
-    conn = sqlite3.connect(f'{now_family}.sql')
-    cur = conn.cursor()
-    cur.execute('select * from list_family')
-    persons = cur.fetchall()
+    persons = view_info('list_family')
     info = f'Список семьи {now_family}:\n'
     for person in persons:
-        info += f'Имя: {person[1]}, фамилия: {person[2]}\n'
+        info += f'{person[1]}, {person[2]}\n'
     bot.send_message(message.chat.id, info)
 
 
