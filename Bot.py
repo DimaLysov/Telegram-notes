@@ -5,6 +5,8 @@ import os
 bot = telebot.TeleBot("8080539230:AAH7x2vQ2wBmvnUKhGnOVQlrptn4sjlnWXs")
 now_family = ''
 now_user_id = ''
+now_note = ''
+now_date = ''
 
 
 def view_info(name_table):
@@ -15,6 +17,7 @@ def view_info(name_table):
     info = cur.fetchall()
     cur.close()
     conn.close()
+    print(info)
     return info
 
 
@@ -33,7 +36,10 @@ def new_family(name_family):
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         family_id int,
                         notes text not null,
-                        date timestamp,
+                        date_start text,
+                        date_end text,
+                        time_start text,
+                        time_end text,
                         foreign key (family_id) references list_family(id)
                         )''')
     conn.commit()
@@ -44,6 +50,7 @@ def new_family(name_family):
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.send_message(message.chat.id, 'Добро пожаловать')
+
 
 @bot.message_handler(commands=['help'])
 def help(message):
@@ -91,6 +98,7 @@ def choice_family(message):
     else:
         bot.send_message(message.chat.id, 'Такой семьи не существует')
 
+
 @bot.message_handler(commands=['add_person'])
 def accept_person(message):
     global now_family
@@ -123,14 +131,14 @@ def accept_user(message):
         bot.send_message(message.chat.id, 'Нельзя добавить событие, пока не выбрана семья')
         return
     bot.send_message(message.chat.id, 'Введите имя и фамилию человека, для которого хотите добавить событие')
-    bot.register_next_step_handler(message, accept_id_user)
+    bot.register_next_step_handler(message, accept_note)
 
 
-def accept_id_user(message):
+def accept_note(message):
     global now_family, now_user_id
     if len(message.text.strip().split()) != 2:
         bot.send_message(message.chat.id, 'Данные введены не корректно, попробуйте снова')
-        bot.register_next_step_handler(message, accept_id_user)
+        bot.register_next_step_handler(message, accept_note)
     name, surname = message.text.strip().split()
     conn = sqlite3.connect(f'{now_family}.sql')
     cur = conn.cursor()
@@ -140,23 +148,54 @@ def accept_id_user(message):
         bot.send_message(message.chat.id, 'Данного человека нет в семье')
         return
     now_user_id = now_user_id[0]
-    bot.send_message(message.chat.id, 'Введите дату и само событие в формате:\ndate(day.month.year)_note')
+    bot.send_message(message.chat.id, 'Введите событие')
+    bot.register_next_step_handler(message, accept_date)
+
+
+def accept_date(message):
+    global now_note
+    if message.text.strip() == '':
+        bot.send_message(message.chat.id, 'Вы не ввели событие, попробуйте снова')
+        bot.register_next_step_handler(message, accept_date)
+    now_note = message.text.strip()
+    bot.send_message(message.chat.id, 'Введите дату в формате:\n'
+                                      'начало-конец\n'
+                                      'Пример: 10.10.2024-11.11.2024\n'
+                                      'Если какой-то даты нет, поставьте вместо нее *')
+    bot.register_next_step_handler(message, accept_time)
+
+def accept_time(message):
+    global now_date
+    now_date = message.text.strip()
+    now_date = now_date.replace('*', 'Null')
+    now_date = now_date.split('-')
+    if len(now_date) != 2:
+        bot.send_message(message.chat.id, 'Данные введены не корректно, попробуйте снова')
+        bot.register_next_step_handler(message, accept_time)
+    bot.send_message(message.chat.id, 'Введите время в формате:\n'
+                                      'начало-конец\n'
+                                      'Пример: 12:10-14:00\n'
+                                      'Если какого-то времени нет, введите вместо него *')
     bot.register_next_step_handler(message, add_note)
 
 
 def add_note(message):
-    global now_family, now_user_id
-    if len(message.text.strip().split('_')) != 2:
-        bot.send_message(message.chat.id, 'Не корректно введены данные, попробуйте снова')
+    global now_family, now_note, now_user_id, now_date
+    time = message.text.strip()
+    time = time.replace('*', 'Null')
+    time = time.split('-')
+    if len(time) != 2:
+        bot.send_message(message.cgat.id, 'Данные введены не корректно, попробуйте снова')
         bot.register_next_step_handler(message, add_note)
-    date, note = message.text.strip().split('_')
     conn = sqlite3.connect(f'{now_family}.sql')
     cur = conn.cursor()
-    cur.execute("insert into list_notes (family_id, notes, date) values ('%s', '%s', '%s')" % (now_user_id, note, date))
+    cur.execute("insert into list_notes (family_id, notes, date_start, date_end, time_start, time_end)"
+                " values (%s, '%s', '%s', '%s', '%s', '%s')" % (
+                now_user_id, now_note, now_date[0], now_date[1], time[0], time[1]))
     conn.commit()
     cur.close()
     conn.close()
-    bot.send_message(message.chat.id, 'Вы успешно добавли событие')
+    bot.send_message(message.chat.id, 'Вы успешно добавили событие')
 
 
 @bot.message_handler(commands=['view_notes'])
@@ -166,14 +205,9 @@ def view_notes(message):
         bot.send_message(message.chat.id, 'В данный момент семья не выбрана')
         return
     notes = view_info('list_notes')
-    print(notes)
-    conn = sqlite3.connect(f'{now_family}.sql')
-    cur = conn.cursor()
-    info = f'Список событий семьи {now_family}:\n'
+    info = 'Список событий семьи:\n'
     for note in notes:
-        cur.execute("select name, surname from list_family where id=%s" % note[1])
-        name, surname = cur.fetchone()
-        info += f'{name} {surname}: {note[2]}. Дата {note[3]}\n'
+        info += f'{note}\n'
     bot.send_message(message.chat.id, info)
 
 
