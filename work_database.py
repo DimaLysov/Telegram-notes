@@ -5,9 +5,9 @@ def view_info(name_table, family):
     cur = conn.cursor()
     cur.execute("select * from %s" % name_table)
     info = cur.fetchall()
+    print(info)
     cur.close()
     conn.close()
-    print(info)
     return info
 
 def new_family(name_family):
@@ -18,7 +18,9 @@ def new_family(name_family):
     cor.execute('''create table if not exists list_family (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         name text not null,
-                        surname text
+                        surname text,
+                        tag text,
+                        chat_id int
                         )''')
     conn.commit()
     cor.execute('''create table if not exists list_notes (
@@ -36,10 +38,11 @@ def new_family(name_family):
     conn.close()
 
 
-def new_person(name, surname, family):
+def new_person(name, surname, tag, chat_id, family):
     conn = sqlite3.connect(f'{family}.sql')
     cur = conn.cursor()
-    cur.execute("insert into list_family (name, surname) values ('%s', '%s')" % (name, surname))
+    cur.execute("insert into list_family (name, surname, tag, chat_id)"
+                "values ('%s', '%s', '%s', '%s')" % (name, surname, tag, chat_id))
     conn.commit()
     cur.close()
     conn.close()
@@ -58,4 +61,25 @@ def select_id(name, surname, family):
     conn = sqlite3.connect(f'{family}.sql')
     cur = conn.cursor()
     cur.execute("select id from list_family where name = '%s' and surname = '%s'" % (name, surname))
-    return cur.fetchone()
+    answer = cur.fetchone()
+    cur.close()
+    conn.close()
+    return answer
+
+def check_human_being(tag, family):
+    conn = sqlite3.connect(f'{family}.sql')
+    cur = conn.cursor()
+    cur.execute("select tag from list_family where tag = '%s'" % tag)
+    answer = cur.fetchone()
+    cur.close()
+    conn.close()
+    return answer
+
+def update_user_id(chat_id, tag, family):
+    conn = sqlite3.connect(f'{family}.sql')
+    cur = conn.cursor()
+    cur.execute("update list_family set chat_id = '%s' where tag = '%s'" % (chat_id, tag))
+    conn.commit()
+    cur.close()
+    conn.close()
+

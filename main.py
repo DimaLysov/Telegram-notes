@@ -1,8 +1,8 @@
 import telebot
+from telebot import types
 import os
-from work_database import view_info, new_family, new_person, select_id, new_note
+from work_database import view_info, new_family, new_person, select_id, new_note, check_human_being, update_user_id
 from functions import compare_dates, check_now_dates
-
 
 bot = telebot.TeleBot("8080539230:AAH7x2vQ2wBmvnUKhGnOVQlrptn4sjlnWXs")
 now_family, now_user_id, now_note, now_date = '', '', '', ''
@@ -10,7 +10,12 @@ now_family, now_user_id, now_note, now_date = '', '', '', ''
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, 'Добро пожаловать')
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn_1 = types.KeyboardButton('/create_family')
+    btn_2 = types.KeyboardButton('/choice_family')
+    markup.row(btn_1, btn_2)
+    bot.send_message(message.chat.id, 'Добро пожаловать\n'
+                                      'Создать новую семью или войдите в уже существующую', reply_markup=markup)
 
 
 @bot.message_handler(commands=['help'])
@@ -27,7 +32,7 @@ def view_commands(message):
 
 @bot.message_handler(commands=['create_family'])
 def accept_family_name(message):
-    bot.send_message(message.chat.id, 'Ведите название своей семьи')
+    bot.send_message(message.chat.id, 'Ведите название своей семьи', reply_markup=types.ReplyKeyboardRemove())
     bot.register_next_step_handler(message, create_family)
 
 
@@ -47,7 +52,8 @@ def create_family(message):
 
 @bot.message_handler(commands=['choice_family'])
 def accept_family(message):
-    bot.send_message(message.chat.id, 'Введите семью в которую хотите перейти')
+    bot.send_message(message.chat.id, 'Введите семью в которую хотите перейти',
+                     reply_markup=types.ReplyKeyboardRemove())
     bot.register_next_step_handler(message, choice_family)
 
 
@@ -55,7 +61,13 @@ def choice_family(message):
     global now_family
     if os.path.exists(f'{message.text}.sql'):
         now_family = message.text.strip()
-        bot.send_message(message.chat.id, 'Вы успешно перешли в вашу семью')
+        check = check_human_being('@' + message.from_user.username, now_family)
+        if check is None:
+            now_family = ''
+            bot.send_message(message.chat.id, 'Ваш тег не добавли в данную семью, поэтому вы не можете в нее зайти')
+        else:
+            update_user_id(message.from_user.id, '@' + message.from_user.username, now_family)
+            bot.send_message(message.chat.id, 'Вы успешно перешли в вашу семью')
     else:
         bot.send_message(message.chat.id, 'Такой семьи не существует')
 
@@ -66,18 +78,25 @@ def accept_person(message):
     if now_family == '':
         bot.send_message(message.chat.id, 'Нельзя добавить человека, пока не выбрана семья')
         return
-    bot.send_message(message.chat.id, 'Введите имя и фамилию нового человека через пробел')
+    bot.send_message(message.chat.id, 'Введите имя, фамилию и тег нового человека через пробел\n'
+                                      'Пример: Иван Иванович @ivan\n'
+                                      'Если какого-то параметра нет введите вместо него -')
     bot.register_next_step_handler(message, add_person)
 
 
 def add_person(message):
     global now_family
-    if len(message.text.strip().split()) != 2:
+    if len(message.text.strip().split()) != 3:
         bot.send_message(message.chat.id, 'Данные введены не корректно, попробуйте снова')
         bot.register_next_step_handler(message, add_person)
         return
-    name, surname = message.text.strip().lower().split()
-    new_person(name, surname, now_family)
+    human_data = message.text.strip()
+    human_data = human_data.replace('-', 'Null')
+    name, surname, tag = human_data.split()
+    chat_id = 'Null'
+    if tag[1:] == message.from_user.username:
+        chat_id = message.from_user.id
+    new_person(name, surname, tag, chat_id, now_family)
     bot.send_message(message.chat.id, 'Вы успешно добавили человека')
 
 
@@ -188,7 +207,7 @@ def view_family(message):
     persons = view_info('list_family', now_family)
     info = f'Список семьи {now_family}:\n'
     for person in persons:
-        info += f'{person[1].capitalize()} {person[2].capitalize()}\n'
+        info += f'{person[1].capitalize()} {person[2].capitalize()} {person[3]}\n'
     bot.send_message(message.chat.id, info)
 
 
@@ -197,6 +216,11 @@ def write_now_family(message):
     global now_family
     answer = f'Выбрана семья: {now_family}' if now_family != '' else 'В данный момент семья не выбрана'
     bot.send_message(message.chat.id, answer)
+
+
+@bot.message_handler(commands=['test'])
+def accept_teg_user(message):
+    bot.send_message(message.chat.id, f'{message.from_user.id} {message.from_user.username}')
 
 
 bot.infinity_polling()
