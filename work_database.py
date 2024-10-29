@@ -1,5 +1,6 @@
 import sqlite3
 
+
 def view_info(name_table, family):
     conn = sqlite3.connect(f'{family}.sql')
     cur = conn.cursor()
@@ -9,6 +10,7 @@ def view_info(name_table, family):
     cur.close()
     conn.close()
     return info
+
 
 def new_family(name_family):
     fail = open(f'{name_family}.sql', 'w')
@@ -47,6 +49,7 @@ def new_person(name, surname, tag, chat_id, family):
     cur.close()
     conn.close()
 
+
 def new_note(user_id, note, start_date, end_date, start_time, end_time, family):
     conn = sqlite3.connect(f'{family}.sql')
     cur = conn.cursor()
@@ -57,14 +60,17 @@ def new_note(user_id, note, start_date, end_date, start_time, end_time, family):
     cur.close()
     conn.close()
 
+
 def select_id(name, surname, family):
     conn = sqlite3.connect(f'{family}.sql')
     cur = conn.cursor()
     cur.execute("select id from list_family where name = '%s' and surname = '%s'" % (name, surname))
-    answer = cur.fetchone()
+    answer = cur.fetchall()
+    print(answer)
     cur.close()
     conn.close()
     return answer
+
 
 def check_human_being(tag, family):
     conn = sqlite3.connect(f'{family}.sql')
@@ -75,6 +81,7 @@ def check_human_being(tag, family):
     conn.close()
     return answer
 
+
 def update_user_id(chat_id, tag, family):
     conn = sqlite3.connect(f'{family}.sql')
     cur = conn.cursor()
@@ -83,3 +90,31 @@ def update_user_id(chat_id, tag, family):
     cur.close()
     conn.close()
 
+
+def uppdate_id_family(chat_id, family):
+    conn = sqlite3.connect('id_chosen_family.sql')
+    cur = conn.cursor()
+    cur.execute("select chat_id from id_family where chat_id = '%s'" % chat_id)
+    user = cur.fetchone()
+    if user is None:
+        cur.execute("insert into id_family (chat_id, family)"
+                    "values ('%s', '%s')" % (chat_id, family))
+        conn.commit()
+    else:
+        cur.execute("update id_family set family = '%s' where chat_id = '%s'" % (family, chat_id))
+        conn.commit()
+    cur.close()
+    conn.close()
+
+
+def get_family(chat_id):
+    conn = sqlite3.connect('id_chosen_family.sql')
+    cur = conn.cursor()
+    cur.execute("select family from id_family where chat_id = '%s'" % chat_id)
+    answer = cur.fetchone()
+    print(answer)
+    cur.close()
+    conn.close()
+    if answer is None:
+        return 'null'
+    return answer[0]
