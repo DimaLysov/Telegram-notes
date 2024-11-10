@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 def compare_dates(date1_str, date2_str, date_format):
     if date1_str == 'Null' or date2_str == 'Null':
         return False
