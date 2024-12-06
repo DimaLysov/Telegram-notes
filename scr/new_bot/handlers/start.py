@@ -1,23 +1,34 @@
-from aiogram import Router, F
+from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from new_bot.keyboards.all_keyboards import main_kb, create_spec_kb, create_rat
+from new_bot.db.requests.User.user_registration import user_registration
+from new_bot.utils.my_utils import Person
 
-start_router = Router()
-
-
-@start_router.message(Command('start'))
-async def cmd_start(message: Message):
-    await message.answer(f'Привет')
-    await message.answer('Вот кнопки', reply_markup=main_kb(message.from_user.id))
+router_start = Router()
 
 
-@start_router.message(Command('start_2'))
-async def cmd_start_2(message: Message):
-    await message.answer('специальные кнопки', reply_markup=create_spec_kb())
+@router_start.message(Command('start'))
+async def cmd_start(m: Message):
+    user = Person(user_name=m.from_user.username,
+                  chat_id=m.from_user.id,
+                  name=m.from_user.first_name.lower(),
+                  surname=m.from_user.last_name)
+    print(user.user_name)
+    await user_registration(user)
+    await m.answer(f'Добро пожаловать\n'
+                   f'Создайте новую семью или войдите в уже существующую')
 
-
-@start_router.message(Command('start_3'))
-async def cmd_start_3(message: Message):
-    await message.answer('builder кнопок', reply_markup=create_rat())
+# @start_router.message(Command('start_2'))
+# async def cmd_start_2(message: Message):
+#     await message.answer('специальные кнопки', reply_markup=create_spec_kb())
+#
+#
+# @start_router.message(Command('start_3'))
+# async def cmd_start_3(message: Message):
+#     await message.answer('builder кнопок', reply_markup=create_rat())
+#
+#
+# @start_router.message(F.text == 'Давай инлайн!')
+# async def get_inline_btn_link(message: Message):
+#     await message.answer('Клавиатура с ссылками', reply_markup=easy_link_kb())

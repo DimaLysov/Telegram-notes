@@ -1,13 +1,19 @@
 import asyncio
 from create_bot import bot, dp
-from handlers.start import start_router
+from new_bot.db.models import async_main
+from new_bot.handlers import routers
 
 
 async def main():
-    dp.include_router(start_router)
+    await async_main()
+    for router in routers:
+        dp.include_router(router)
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        print("Bot stopped")
