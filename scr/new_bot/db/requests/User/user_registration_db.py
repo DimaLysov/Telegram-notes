@@ -1,7 +1,7 @@
 from sqlalchemy import select, update
 
 from new_bot.db.models import async_session
-from new_bot.db.models import Family, User
+from new_bot.db.models import User
 from new_bot.utils.my_utils import Person
 
 

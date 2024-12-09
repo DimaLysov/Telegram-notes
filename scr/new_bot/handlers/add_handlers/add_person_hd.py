@@ -5,7 +5,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 
 from new_bot.utils.my_utils import Person
-from new_bot.db.requests.User.add_new_user import add_new_user
+from new_bot.db.requests.User.add_new_user_db import add_new_user
 
 router_add_person = Router()
 

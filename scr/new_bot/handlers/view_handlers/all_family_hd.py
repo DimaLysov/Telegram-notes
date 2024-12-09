@@ -1,7 +1,7 @@
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
-from new_bot.db.requests.Family.give_all_family import give_all_family
+from new_bot.db.requests.Family.give_all_family_db import give_all_family
 
 router_all_family = Router()
 

@@ -2,7 +2,7 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from new_bot.db.requests.User.user_registration import user_registration
+from new_bot.db.requests.User.user_registration_db import user_registration
 from new_bot.utils.my_utils import Person
 
 router_start = Router()

@@ -3,7 +3,8 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
-from new_bot.db.requests.Family.create_family import create_family
+from new_bot.db.requests.Family.create_family_db import create_family
+from new_bot.utils.my_utils import Person
 
 router_create_family = Router()
 
@@ -19,10 +20,14 @@ async def new_family(message: Message, state: FSMContext):
 
 
 @router_create_family.message(FormFamily.name_family)
-async def add_new_family(message: Message, state: FSMContext):
-    answer = await create_family(message.text)
+async def add_new_family(m: Message, state: FSMContext):
+    user = Person(user_name=m.from_user.username,
+                  chat_id=m.from_user.id,
+                  name=m.from_user.first_name.lower(),
+                  surname=m.from_user.last_name)
+    answer = await create_family(user, m.text)
     if answer:
-        await message.answer(text='Вы успешно создали семью')
+        await m.answer(text='Вы успешно создали семью')
     else:
-        await message.answer(text='Семья с таким названием уже есть')
+        await m.answer(text='Семья с таким названием уже есть')
     await state.clear()
