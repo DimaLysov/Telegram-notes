@@ -11,16 +11,16 @@ router_choose_family = Router()
 
 
 class FormFamily(StatesGroup):
-    name_family = State()
+    chose_name_family = State()
 
 
 @router_choose_family.message(Command('choice_family'))
 async def process_name_family(m: Message, state: FSMContext):
-    await state.set_state(FormFamily.name_family)
+    await state.set_state(FormFamily.chose_name_family)
     await m.answer(text='Введите название семьи, в которую хотите перейти')
 
 
-@router_choose_family.message(FormFamily.name_family)
+@router_choose_family.message(FormFamily.chose_name_family)
 async def choose_family_hd(m: Message, state: FSMContext):
     user = Person(user_name=m.from_user.username,
                   chat_id=m.from_user.id,
