@@ -1,41 +1,11 @@
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, KeyboardButtonPollType
-from aiogram.utils.keyboard import ReplyKeyboardBuilder
-
-from new_bot.create_bot import admins
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
 
-def main_kb(user_telegram_id: int):
-    kb_list = [
-        [KeyboardButton(text="Создать семью"), KeyboardButton(text="Войти в семью")],
-    ]
-    if user_telegram_id in admins:
-        kb_list.append([KeyboardButton(text="⚙️ Админ панель")])
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=kb_list,
-        resize_keyboard=True,
-        one_time_keyboard=True,
-        input_field_placeholder="Воспользуйтесь меню:"
-    )
+def create_rat(families):
+    kb_list = []
+    for item in range(1, len(families), 2):
+        kb_list.append([KeyboardButton(text=families[item - 1]), KeyboardButton(text=families[item])])
+    if len(families) % 2 != 0:
+        kb_list.append([KeyboardButton(text=families[-1])])
+    keyboard = ReplyKeyboardMarkup(keyboard=kb_list, resize_keyboard=True)
     return keyboard
-
-
-# def create_spec_kb():
-#     kb_list = [
-#         [KeyboardButton(text="Отправить гео", request_location=True)],
-#         [KeyboardButton(text="Поделиться номером", request_contact=True)],
-#         [KeyboardButton(text="Отправить викторину/опрос", request_poll=KeyboardButtonPollType())]
-#     ]
-#     keybord = ReplyKeyboardMarkup(keyboard=kb_list,
-#                                   resize_keyboard=True,
-#                                   one_time_keyboard=True,
-#                                   input_field_placeholder="Воспользуйтесь специальной клавиатурой:")
-#     return keybord
-#
-#
-# def create_rat():
-#     builder = ReplyKeyboardBuilder()
-#     for item in [str(i) for i in range(1, 11)]:
-#         builder.button(text=item)
-#     builder.button(text='Назад')
-#     builder.adjust(4, 4, 2, 1)
-#     return builder.as_markup(resize_keyboard=True)
