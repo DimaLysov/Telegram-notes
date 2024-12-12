@@ -11,8 +11,10 @@ async def user_registration(new_user: Person):
         if not user:
             session.add(User(**new_user.__dict__))
             await session.commit()
-            return
+            return False
         elif user.chat_id is None:
             user.chat_id = new_user.chat_id
+            user.name = new_user.name
+            user.surname = new_user.surname
             await session.commit()
-        return
+            return True

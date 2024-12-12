@@ -2,6 +2,7 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
+from new_bot.db.requests.Family.give_family_user_db import give_family_user_db
 from new_bot.db.requests.User.user_registration_db import user_registration
 from new_bot.utils.my_utils import Person
 
@@ -15,10 +16,13 @@ async def cmd_start(m: Message):
                   name=m.from_user.first_name.lower(),
                   surname=m.from_user.last_name)
     print(user.user_name)
-    await user_registration(user)
-    await m.answer(f'Добро пожаловать\n'
-                   f'Создайте новую семью или войдите в уже существующую')
-
+    answer = await user_registration(user)
+    if answer:
+        name_family = await give_family_user_db(user)
+        await m.answer(text=f'Добро пожаловать, вас уже добавили в семью {name_family}')
+    else:
+        await m.answer(text='Добро пожаловать, вас никто не добавлял в семью')
+    await m.answer(text='Нажмите /help чтобы вывести возможные команды')
 # @start_router.message(Command('start_2'))
 # async def cmd_start_2(message: Message):
 #     await message.answer('специальные кнопки', reply_markup=create_spec_kb())

@@ -27,8 +27,11 @@ async def choose_family_hd(m: Message, state: FSMContext):
                   name=m.from_user.first_name,
                   surname=m.from_user.last_name)
     answer = await choose_family_db(user, m.text)
-    if answer:
+    if answer == 1:
+        await m.answer(text='Семьи с таким названием нет\n'
+                            'Для того чтобы создать семью введите команду /create_family')
+    elif answer == 2:
+        await m.answer(text='Вы не можете перейти в данную семью, пока ее создатель вас не добавит в нее')
+    elif answer == 3:
         await m.answer(text='Вы успешно перешли в семью')
-    else:
-        await m.answer(text='Вы не можете перейти в данную семью')
     await state.clear()
