@@ -9,9 +9,6 @@ router_now_family = Router()
 
 @router_now_family.message(Command('now_family'))
 async def give_now_family(m: Message):
-    user = Person(user_name=m.from_user.username,
-                  chat_id=m.from_user.id,
-                  name=m.from_user.first_name.lower(),
-                  surname=m.from_user.last_name)
-    now_fml = await give_family_user_db(user)
+    user_name = '@' + m.from_user.username
+    now_fml = await give_family_user_db(user_name)
     await m.answer(text=f'Выбрана семья - {now_fml}')

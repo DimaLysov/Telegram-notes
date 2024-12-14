@@ -21,11 +21,8 @@ async def new_family(message: Message, state: FSMContext):
 
 @router_create_family.message(FormFamily.name_family)
 async def add_new_family(m: Message, state: FSMContext):
-    user = Person(user_name=m.from_user.username,
-                  chat_id=m.from_user.id,
-                  name=m.from_user.first_name.lower(),
-                  surname=m.from_user.last_name)
-    answer = await create_family(user, m.text)
+    user_name = '@' + m.from_user.username
+    answer = await create_family(user_name, m.text)
     if answer:
         await m.answer(text='Вы успешно создали семью')
     else:

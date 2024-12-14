@@ -6,7 +6,6 @@ from new_bot.db.requests.Family.give_family_user_db import give_family_user_db
 from new_bot.db.requests.Family.give_id_famiy_db import give_id_family
 from new_bot.db.requests.User.give_id_person_db import give_id_person
 from new_bot.db.requests.User_Family.add_link_db import add_link
-from new_bot.utils.my_utils import Person
 
 
 async def give_all_users_fml(name_family):

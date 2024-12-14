@@ -8,7 +8,7 @@ from new_bot.db.requests.User_Family.add_link_db import add_link
 from new_bot.utils.my_utils import Person
 
 
-async def add_new_user(new_user: Person, adder_user: Person):
+async def add_new_user(new_user: Person, adder_user_name: str):
     async with async_session() as session:
         answer = False
         user = await session.scalar(select(User).where(User.user_name == new_user.user_name))
@@ -18,6 +18,6 @@ async def add_new_user(new_user: Person, adder_user: Person):
                              surname=new_user.surname))
             await session.commit()
             answer = True
-        name_family = await give_family_user_db(adder_user)
-        await add_link(new_user, name_family)
+        name_family = await give_family_user_db(adder_user_name)
+        await add_link(new_user.user_name, name_family)
         return answer

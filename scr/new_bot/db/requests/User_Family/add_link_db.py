@@ -8,8 +8,8 @@ from new_bot.db.requests.User_Family.update_status_db import update_status_db
 from new_bot.utils.my_utils import Person
 
 
-async def add_link(user: Person, name_family: str):
-    user_id = await give_id_person(user.user_name)
+async def add_link(user_name: str, name_family: str):
+    user_id = await give_id_person(user_name)
     family_id = await give_id_family(name_family)
     async with async_session() as session:
         link = await session.scalar(select(UserFamily).filter(and_(
@@ -19,5 +19,5 @@ async def add_link(user: Person, name_family: str):
         if not link:
             session.add(UserFamily(user_id=user_id, family_id=family_id))
             await session.commit()
-        await update_status_db(user, name_family)
+        await update_status_db(user_name, name_family)
         return

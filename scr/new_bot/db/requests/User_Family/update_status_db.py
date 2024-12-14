@@ -7,8 +7,8 @@ from new_bot.utils.my_utils import Person
 from new_bot.db.requests.Family.give_id_famiy_db import give_id_family
 
 
-async def update_status_db(user: Person, name_new_family):
-    user_id = await give_id_person(user.user_name)
+async def update_status_db(user_name: str, name_new_family):
+    user_id = await give_id_person(user_name)
     async with async_session() as session:
         old_user_family = await session.scalar(select(UserFamily).filter(and_(
             UserFamily.user_id == user_id,

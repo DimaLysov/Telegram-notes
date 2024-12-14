@@ -18,7 +18,7 @@ async def cmd_start(m: Message):
     print(user.user_name)
     answer = await user_registration(user)
     if answer:
-        name_family = await give_family_user_db(user)
+        name_family = await give_family_user_db(user.user_name)
         await m.answer(text=f'Добро пожаловать, вас уже добавили в семью {name_family}')
     else:
         await m.answer(text='Добро пожаловать, вас никто не добавлял в семью')

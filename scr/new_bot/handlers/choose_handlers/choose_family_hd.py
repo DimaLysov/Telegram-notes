@@ -21,11 +21,8 @@ class FormFamily(StatesGroup):
 @router_choose_family.message(Command('choice_family'))
 async def process_name_family(m: Message, state: FSMContext):
     await state.set_state(FormFamily.chose_name_family)
-    user = Person(user_name=m.from_user.username,
-                  chat_id=m.from_user.id,
-                  name=m.from_user.first_name,
-                  surname=m.from_user.last_name)
-    families = await give_all_families_user(user)
+    user_name = '@' + m.from_user.username
+    families = await give_all_families_user(user_name)
     if not families:
         await m.answer(text='У вас нет пока ни одной семьи\n'
                             'Чтобы создать семью введите команду /create_family')
@@ -36,11 +33,8 @@ async def process_name_family(m: Message, state: FSMContext):
 
 @router_choose_family.message(FormFamily.chose_name_family)
 async def choose_family_hd(m: Message, state: FSMContext):
-    user = Person(user_name=m.from_user.username,
-                  chat_id=m.from_user.id,
-                  name=m.from_user.first_name,
-                  surname=m.from_user.last_name)
-    answer = await choose_family_db(user, m.text)
+    user_name = '@' + m.from_user.username
+    answer = await choose_family_db(user_name, m.text)
     if answer == 1:
         await m.answer(text='Семьи с таким названием нет\n'
                             'Для того чтобы создать семью введите команду /create_family')

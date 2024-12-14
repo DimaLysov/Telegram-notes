@@ -11,7 +11,7 @@ async def cmd_help(message: Message):
                               '/create_family - Создать семью\n'
                               '/choice_family - Сменить семью\n'
                               '/add_person - Добавить человека в семью\n'
-                              '/add_note - Добавить событие для человека\n'
+                              '/add_event - Добавить событие для человека\n'
                               '/view_family - Показать состав семьи\n'
-                              '/view_notes - Показать события семьи\n'
+                              '/view_events - Показать события семьи\n'
                               '/now_family - Показать выбранную семью\n')

@@ -18,11 +18,8 @@ class FormUser(StatesGroup):
 @router_add_person.message(Command('add_person'))
 async def add_new_persona(m: Message, state: FSMContext):
     await state.set_state(FormUser.tg_name)
-    user = Person(user_name=m.from_user.username,
-                  chat_id=m.from_user.id,
-                  name=m.from_user.first_name,
-                  surname=m.from_user.last_name)
-    answer = await give_chosen_family_db(user)
+    user_name = '@' + m.from_user.username
+    answer = await give_chosen_family_db(user_name)
     if answer is None:
         await m.answer(text='Вы не можете добавит человека, пока не выберите семью\n'
                             'Чтобы выбрать семью, выведите команду /choice_family')
@@ -40,10 +37,7 @@ async def add_person(m: Message, state: FSMContext):
                       chat_id=None,
                       name=' ',
                       surname=' ')
-    adder_user = Person(user_name=m.from_user.username,
-                        chat_id=m.from_user.id,
-                        name=m.from_user.first_name,
-                        surname=m.from_user.last_name)
+    adder_user = '@' + m.from_user.username
     answer = await add_new_user(new_user, adder_user)
     if answer:
         await m.answer(text='Вы успешно зарегистрировали человека и добавили в семью')
