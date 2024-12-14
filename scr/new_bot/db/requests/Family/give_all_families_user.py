@@ -15,7 +15,6 @@ async def give_all_families_user(user: Person):
             UserFamily.user_id == user_id
         ))
         answer = [family.name_family for family in families]
-        await asyncio.sleep(1)
         return answer
 
 
